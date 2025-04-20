@@ -1,0 +1,572 @@
+GFDL_ESM2M_NOAA_USA_RCP_45_all
+
+pip install cftime #Py package using the package manager pip
+
+#STEP - 1
+import xarray as xr #Py lib that works with multi-dimensional arrays like NetCDF
+import pandas as pd #Py lib that provides data structures for analysis
+
+#STEP - 2
+file_pattern='C:/tasmax/*.nc'
+dataset=xr.open_mfdataset(file_pattern)
+
+file_pattern2='C:/tasmin/*.nc'
+dataset2=xr.open_mfdataset(file_pattern2)
+
+file_pattern3='C:/rsds/*.nc'
+dataset3=xr.open_mfdataset(file_pattern3)
+
+file_pattern4='C:/pr/*.nc'
+dataset4=xr.open_mfdataset(file_pattern4)
+
+dataset.time
+
+#STEP - 3
+latitude=29.21582929
+longitude=-99.75581622
+start_date='2006-01-01'
+end_date='2100-12-31'
+
+#STEP - 4
+dataset.variables.keys()
+dataset2.variables.keys()
+dataset3.variables.keys()
+dataset4.variables.keys()
+
+#STEP - 5
+tasmax=dataset.variables['tasmax'][:]
+tasmin=dataset2.variables['tasmin'][:]
+rsds=dataset3.variables['rsds'][:]
+pr=dataset4.variables['pr'][:]
+
+#STEP - 6
+dataset_interp=dataset.interp(lat=latitude,lon=longitude,method='nearest')
+subset=dataset_interp['tasmax'].sel(time=slice(start_date,end_date))-272.15
+
+dataset_interp2=dataset2.interp(lat=latitude,lon=longitude,method='nearest')
+subset2=dataset_interp2['tasmin'].sel(time=slice(start_date,end_date))-272.15
+
+dataset_interp3=dataset3.interp(lat=latitude,lon=longitude,method='nearest')
+subset3=dataset_interp3['rsds'].sel(time=slice(start_date,end_date))*86400/1000000
+
+dataset_interp4=dataset4.interp(lat=latitude,lon=longitude,method='nearest')
+subset4=dataset_interp4['pr'].sel(time=slice(start_date,end_date))* 86400
+
+#STEP - 7
+merged_data=xr.merge([subset,subset2,subset3,subset4])
+
+#STEP - 8
+#df = pd.DataFrame({'time':time,'tmax': tmax, 'tmin': tmin, 'precip': precip})
+df=merged_data.to_dataframe().reset_index()
+df1=df.to_csv('C:/climate_data/RCP_45_all.csv',index=False)
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+ACCESS1_CSIRO_Australia_45_all
+
+import xarray as xr
+import pandas as pd
+import numpy as np
+
+# Your coordinates
+latitude = 29.21582929
+longitude = -99.75581622
+
+# Update file
+file_pattern = 'C:/tasmax/*.nc'
+file_pattern2 = 'C:/tasmin/*.nc'
+file_pattern3 = 'C:/rsds/*.nc'
+file_pattern4 = 'C:/pr/*.nc'
+
+# datasets
+dataset = xr.open_mfdataset(file_pattern)
+dataset2 = xr.open_mfdataset(file_pattern2)
+dataset3 = xr.open_mfdataset(file_pattern3)
+dataset4 = xr.open_mfdataset(file_pattern4)
+
+# longitude to 0-360 range 
+adjusted_lon = longitude + 360 if longitude < 0 else longitude
+
+# closest latitude and longitude 
+closest_lat = dataset.lat.sel(lat=latitude, method='nearest')
+closest_lon = dataset.lon.sel(lon=adjusted_lon, method='nearest')
+
+# Print
+print("Adjusted Longitude:", adjusted_lon)
+print("Closest Latitude:", closest_lat.values)
+print("Closest Longitude:", closest_lon.values)
+
+# Extract 
+data_at_location = dataset.sel(lat=closest_lat, lon=closest_lon, method='nearest')
+data_at_location2 = dataset2.sel(lat=closest_lat, lon=closest_lon, method='nearest')
+data_at_location3 = dataset3.sel(lat=closest_lat, lon=closest_lon, method='nearest')
+data_at_location4 = dataset4.sel(lat=closest_lat, lon=closest_lon, method='nearest')
+
+# Extract the variables
+tasmax_data = data_at_location.tasmax
+tasmin_data = data_at_location2.tasmin
+rsds_data = data_at_location3.rsds
+pr_data = data_at_location4.pr
+
+# Convert time 
+time_index = pd.to_datetime(dataset.time.values)
+
+# Convert all data
+tasmax_df = pd.DataFrame({'time': time_index, 'tasmax': tasmax_data.values})
+tasmin_df = pd.DataFrame({'time': time_index, 'tasmin': tasmin_data.values})
+rsds_df = pd.DataFrame({'time': time_index, 'rsds': rsds_data.values})
+pr_df = pd.DataFrame({'time': time_index, 'pr': pr_data.values})
+
+# Merge all DataFrames
+combined_df = pd.merge(tasmax_df, tasmin_df, on='time')
+combined_df = pd.merge(combined_df, rsds_df, on='time')
+combined_df = pd.merge(combined_df, pr_df, on='time')
+
+# Specify the path 
+excel_file_path = 'C:/climate_data/RCP_45_all.xlsx'
+
+# Save
+combined_df.to_excel(excel_file_path, index=False)
+
+print("Data successfully saved to", excel_file_path)
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+MPI_ESM_MR_MPI_Germany_45_all
+
+import xarray as xr
+import pandas as pd
+import numpy as np
+
+# coordinates
+latitude = 29.21582929
+longitude = -99.75581622
+
+# Update file 
+file_pattern = 'C:/tasmax/*.nc'
+file_pattern2 = 'C:/tasmin/*.nc'
+file_pattern3 = 'C:/rsds/*.nc'
+file_pattern4 = 'C:/pr/*.nc'
+
+# datasets
+dataset = xr.open_mfdataset(file_pattern)
+dataset2 = xr.open_mfdataset(file_pattern2)
+dataset3 = xr.open_mfdataset(file_pattern3)
+dataset4 = xr.open_mfdataset(file_pattern4)
+
+# Convert longitude 
+adjusted_lon = longitude + 360 if longitude < 0 else longitude
+
+# Find the closest latitude
+closest_lat = dataset.lat.sel(lat=latitude, method='nearest')
+closest_lon = dataset.lon.sel(lon=adjusted_lon, method='nearest')
+
+# Print 
+print("Adjusted Longitude:", adjusted_lon)
+print("Closest Latitude:", closest_lat.values)
+print("Closest Longitude:", closest_lon.values)
+
+# Extract data
+data_at_location = dataset.sel(lat=closest_lat, lon=closest_lon, method='nearest')
+data_at_location2 = dataset2.sel(lat=closest_lat, lon=closest_lon, method='nearest')
+data_at_location3 = dataset3.sel(lat=closest_lat, lon=closest_lon, method='nearest')
+data_at_location4 = dataset4.sel(lat=closest_lat, lon=closest_lon, method='nearest')
+
+# Extract the variables 
+tasmax_data = data_at_location.tasmax
+tasmin_data = data_at_location2.tasmin
+rsds_data = data_at_location3.rsds
+pr_data = data_at_location4.pr
+
+# Convert time
+time_index = pd.to_datetime(dataset.time.values)
+
+# Ensure all datasets
+# Reindex each dataset to match the time_index and fill missing data with NaN
+tasmax_data_aligned = tasmax_data.sel(time=time_index, method='nearest')
+tasmin_data_aligned = tasmin_data.sel(time=time_index, method='nearest')
+rsds_data_aligned = rsds_data.sel(time=time_index, method='nearest')
+pr_data_aligned = pr_data.sel(time=time_index, method='nearest')
+
+# Convert all data
+tasmax_df = pd.DataFrame({'time': time_index, 'tasmax': tasmax_data_aligned.values})
+tasmin_df = pd.DataFrame({'time': time_index, 'tasmin': tasmin_data_aligned.values})
+rsds_df = pd.DataFrame({'time': time_index, 'rsds': rsds_data_aligned.values})
+pr_df = pd.DataFrame({'time': time_index, 'pr': pr_data_aligned.values})
+
+# Merge all DataFrames
+combined_df = pd.merge(tasmax_df, tasmin_df, on='time')
+combined_df = pd.merge(combined_df, rsds_df, on='time')
+combined_df = pd.merge(combined_df, pr_df, on='time')
+
+# Specify the path
+excel_file_path = 'C:/climate_data/RCP_45_all.xlsx'
+
+# Save
+combined_df.to_excel(excel_file_path, index=False)
+
+print("Data successfully saved to", excel_file_path)
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+R CODES FOR AL CLIMATE MODELS
+
+library(readxl)
+library(ggplot2)
+library(dplyr)
+library(scales)
+library(reshape2)
+library(ggpattern)
+
+# file
+file_path <- "z_all_averaged.xlsx"
+climate_data <- read_excel(file_path, sheet = "Sheet1")
+
+# ur timeline periods
+climate_data$Timeline <- factor(climate_data$Timeline, 
+                                levels = c("2006-2024", "2025-2050", "2051-2075", "2076-2100"))
+
+# make a  long format better for presentation
+climate_long <- melt(climate_data,
+                     id.vars = c("Models", "RCP_scenarios", "Timeline"),
+                     measure.vars = c("TMAX", "TMIN", "SRAD", "Rainfall"),
+                     variable.name = "Parameter", value.name = "Value")
+
+# split the data
+rainfall_data <- filter(climate_long, Parameter == "Rainfall")
+lines_data <- filter(climate_long, Parameter != "Rainfall")
+
+# Color /shapes
+parameter_colors <- c("TMAX" = "red", "TMIN" = "green", "SRAD" = "orange")
+parameter_shapes <- c("TMAX" = 16, "TMIN" = 17, "SRAD" = 15)
+
+# ggplot here
+ggplot() +
+  # Cylindrical-look rainfall bars using radial pattern
+  geom_bar_pattern(data = rainfall_data,
+                   aes(x = Timeline, y = Value, group = Models),
+                   stat = "identity",
+                   position = position_dodge(width = 0.6),
+                   width = 0.4,
+                   fill = "blue",
+                   color = "black", # slight outline helps 3D illusion
+                   pattern = "gradient",
+                   pattern_fill = "lightblue",
+                   pattern_angle = 90,
+                   pattern_density = 0.5,
+                   pattern_spacing = 0.02,
+                   alpha = 0.8) +
+  
+  # Line /markers
+  geom_line(data = lines_data,
+            aes(x = Timeline, y = Value, group = interaction(Parameter, Models),
+                color = Parameter), size = 1.2) +
+  geom_point(data = lines_data,
+             aes(x = Timeline, y = Value, color = Parameter, shape = Parameter), size = 3) +
+  
+  # Color shape mapping
+  scale_color_manual(values = parameter_colors) +
+  scale_shape_manual(values = parameter_shapes) +
+  
+  # yaxis 
+  scale_y_continuous(
+    name = "Temperature (°C) / SRAD (MJ/m²/day)",
+    sec.axis = dup_axis(name = "Rainfall (mm)")
+  ) +
+  
+  facet_wrap(~ interaction(Models, RCP_scenarios), ncol = 2) +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 18, colour = "black"),    # x-axis tick labels
+    axis.text.y = element_text(size = 18, colour = "black"),                            # y-axis tick labels
+    axis.title.x = element_text(size = 18, face = "bold", colour = "black"),                           # x-axis title
+    axis.title.y = element_text(size = 18, colour = "black"),                           # y-axis title
+    legend.text = element_text(size = 18, colour = "black"),                            # legend text
+    legend.title = element_text(size = 18, colour = "black"),                           # legend title (optional)
+    strip.text = element_text(size = 18, face = "bold", colour = "black"),              # facet labels
+    plot.title = element_text(size = 18, face = "bold", hjust = 0.5, colour = "black"), # plot title
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank()
+  )
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+R CODES FOR CLIMATE DATA
+
+# libs
+library(ggplot2)
+library(readxl)
+library(dplyr)
+
+# your file
+data <- read_excel("Climate_Averages.xlsx", sheet = 1)
+
+# periods
+data$Period <- factor(data$Period, levels = c("2006-2024", "2025-2050", "2051-2070", "2071-2100"))
+
+# plot
+ggplot(data, aes(x = Period, y = Grain_yield_kg_ha)) +
+  geom_violin(trim = FALSE, fill = "blue", alpha = 0.6) +  
+  geom_boxplot(width = 0.1, outlier.shape = NA, color = "red") +  
+  stat_summary(fun = median, geom = "point", shape = 20, size = 4, color = "red") +  
+  labs(title = "",
+       x = "Time Period",
+       y = "Grain Yield (kg/ha)") +
+  theme_minimal(base_size = 15) +  
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, color = "black", size = 36),  
+    axis.text.y = element_text(color = "black", size = 36),  
+    axis.title = element_text(color = "black", size = 38, face = "bold"),  
+    plot.title = element_text(hjust = 0.5, color = "black", size = 38, face = "bold"),  
+    panel.grid = element_blank(),  
+    axis.ticks.length = unit(0.3, "cm"),  
+    axis.ticks = element_line(color = "black"),  
+    axis.ticks.minor = element_blank(),  
+    axis.line.x = element_line(color = "black", size = 1),  
+    axis.line.y = element_line(color = "black", size = 1),  
+    panel.border = element_blank()  
+  )
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+R CODES FOR GRAIN YIELD WITH CRF - CLIMATE RISK FACTOR
+
+# Load necessary libraries
+library(readxl)
+library(ggplot2)
+
+# Read the data from the Excel file
+data <- read_excel("Climate_Averages.xlsx", sheet = "Box_plots_45")
+
+# Create a customized theme
+custom_theme <- theme(
+  panel.grid.major = element_blank(),  # Remove major grid lines
+  panel.grid.minor = element_blank(),  # Remove minor grid lines
+  panel.background = element_blank(),  # Remove background shading
+  axis.line = element_line(color = "black", size = 1),  # Add black axis lines
+  axis.text = element_text(size = 32, color = "black"),  # Tick text size and color
+  axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),  # Rotate x-axis labels at 45 degrees
+  axis.ticks = element_line(color = "black", size = 1),  # Tick marks color and size
+  axis.title = element_text(size = 34, face = "bold", color = "black"),  # Axis title styling
+  legend.position = "none"  # Remove legend
+)
+
+# Create box plot for Grain_yield_kg_ha by GCM
+ggplot(data, aes(x = GCM, y = Grain_yield_kg_ha, fill = GCM)) +
+  geom_boxplot() +
+  labs(title = "", x = "GCM - Global Climate Models", y = "Grain Yield (kg/ha)") +
+  custom_theme
+
+# Create box plot for CRF_climate_risk_factor by GCM
+ggplot(data, aes(x = GCM, y = CRF_climate_risk_factor, fill = GCM)) +
+  geom_boxplot() +
+  labs(title = "", x = "GCM - Global Climate Models", y = "CRF - Climate Risk Factor") +
+  custom_theme
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+#SOIL WATER CONTENT ACROSS DIFFERENT CLIMATES 2006-2100
+# Load libraries
+library(readxl)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+
+# Read data
+df <- read_excel("Book1.xlsx", sheet = "Sheet1")
+
+# Reshape from wide to long
+df_long <- df %>%
+  pivot_longer(
+    cols = -period,
+    names_to = "GCM_RCP",
+    values_to = "value"
+  )
+
+# Extract GCM and RCP, create ShapeGroup, and add fixed error bars
+df_long <- df_long %>%
+  mutate(
+    GCM = sub("_RCP_.*", "", GCM_RCP),
+    RCP = paste0("RCP_", sub(".*_RCP_", "", GCM_RCP)),
+    ShapeGroup = paste(RCP, period, sep = " - "),
+    ymin = value - 0.02,  # Fixed error margin
+    ymax = value + 0.02
+  )
+
+# Clean GCM names
+df_long$GCM <- gsub("_+", "_", df_long$GCM)
+df_long$GCM <- gsub("_$", "", df_long$GCM)
+
+# Plot with error bars and y-axis formatting
+ggplot(df_long, aes(x = GCM, y = value, shape = ShapeGroup)) +
+  geom_point(size = 3, position = position_dodge(width = 0.7)) +
+  geom_errorbar(aes(ymin = ymin, ymax = ymax), width = 0.2, position = position_dodge(width = 0.7)) +
+  labs(
+    title = "",
+    x = "GCM",
+    y = "Projected SWC",
+    shape = "RCP + Period"
+  ) +
+  scale_y_continuous(breaks = c(0.1, 0.2, 0.3, 0.4), limits = c(0.1, 0.4)) +
+  theme_minimal(base_size = 14, base_family = "Times New Roman") +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    axis.line = element_line(color = "black", size = 0.7),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 22, color = "black", family = "Times New Roman"),
+    axis.text.y = element_text(size = 22, color = "black", family = "Times New Roman"),
+    axis.title.x = element_text(size = 22, face = "bold", color = "black", family = "Times New Roman"),
+    axis.title.y = element_text(size = 22, face = "bold", color = "black", family = "Times New Roman"),
+    axis.ticks.length = unit(0.3, "cm"),
+    axis.ticks = element_line(color = "black"),
+    legend.text = element_text(color = "black", family = "Times New Roman"),
+    legend.title = element_text(face = "bold", color = "black", family = "Times New Roman")
+  ) +
+  scale_shape_manual(values = c(
+    "RCP_45 - 2006-2024" = 16,
+    "RCP_85 - 2006-2024" = 1,
+    "RCP_45 - 2025-2050" = 15,
+    "RCP_85 - 2025-2050" = 0,
+    "RCP_45 - 2051-2075" = 17,
+    "RCP_85 - 2051-2075" = 2,
+    "RCP_45 - 2076-2100" = 18,
+    "RCP_85 - 2076-2100" = 5,
+    "RCP_45 - Group1" = 3,
+    "RCP_85 - Group1" = 4,
+    "RCP_45 - Group2" = 24,
+    "RCP_85 - Group2" = 23,
+    "RCP_45 - Group3" = 8,
+    "RCP_85 - Group3" = 9
+  ))
+
+ADDITIONAL:
+
+ACCESS1_CSIRO [n = 8, mean = 0.31, se = 0.01]
+CMCC [n = 8, mean = 0.15, se = 0.00]
+CanESM2 [n = 8, mean = 0.28, se = 0.01]
+GFDL_ESM2M [n = 8, mean = 0.17, se = 0.00]
+IPSL_CM5A_LR_IPSL [n = 8, mean = 0.28, se = 0.01]
+MPI [n = 8, mean = 0.24, se = 0.00]
+NorESM1_M_NCC [n = 8, mean = 0.35, se = 0.00]
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+#SOIL WATER CONTENT ACROSS DIFFERENT CLIMATES 2006-2100 (WITH P-VALUES AND MEAN +- SE)
+# Load libraries
+library(readxl)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+
+# Read data
+df <- read_excel("Book1.xlsx", sheet = "Sheet1")
+
+# Reshape from wide to long
+df_long <- df %>%
+  pivot_longer(
+    cols = -period,
+    names_to = "GCM_RCP",
+    values_to = "value"
+  )
+
+# Extract GCM and RCP, create ShapeGroup, and add fixed error bars
+df_long <- df_long %>%
+  mutate(
+    GCM = sub("_RCP_.*", "", GCM_RCP),
+    RCP = paste0("RCP_", sub(".*_RCP_", "", GCM_RCP)),
+    ShapeGroup = paste(RCP, period, sep = " - "),
+    ymin = value - 0.02,  # Fixed error margin
+    ymax = value + 0.02
+  )
+
+# Clean GCM names
+df_long$GCM <- gsub("_+", "_", df_long$GCM)
+df_long$GCM <- gsub("_$", "", df_long$GCM)
+
+# Plot with error bars and y-axis formatting
+ggplot(df_long, aes(x = GCM, y = value, shape = ShapeGroup)) +
+  geom_point(size = 3, position = position_dodge(width = 0.7)) +
+  geom_errorbar(aes(ymin = ymin, ymax = ymax), width = 0.2, position = position_dodge(width = 0.7)) +
+  labs(
+    title = "",
+    x = "GCM",
+    y = "Projected Value",
+    shape = "RCP + Period"
+  ) +
+  scale_y_continuous(breaks = c(0.1, 0.2, 0.3, 0.4), limits = c(0.1, 0.4)) +
+  theme_minimal(base_size = 14, base_family = "Times New Roman") +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    axis.line = element_line(color = "black", size = 0.7),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 22, color = "black", family = "Times New Roman"),
+    axis.text.y = element_text(size = 22, color = "black", family = "Times New Roman"),
+    axis.title.x = element_text(size = 22, face = "bold", color = "black", family = "Times New Roman"),
+    axis.title.y = element_text(size = 22, face = "bold", color = "black", family = "Times New Roman"),
+    axis.ticks.length = unit(0.3, "cm"),
+    axis.ticks = element_line(color = "black"),
+    legend.text = element_text(color = "black", family = "Times New Roman"),
+    legend.title = element_text(face = "bold", color = "black", family = "Times New Roman")
+  ) +
+  scale_shape_manual(values = c(
+    "RCP_45 - 2006-2024" = 16,
+    "RCP_85 - 2006-2024" = 1,
+    "RCP_45 - 2025-2050" = 15,
+    "RCP_85 - 2025-2050" = 0,
+    "RCP_45 - 2051-2075" = 17,
+    "RCP_85 - 2051-2075" = 2,
+    "RCP_45 - 2076-2100" = 18,
+    "RCP_85 - 2076-2100" = 5,
+    "RCP_45 - Group1" = 3,
+    "RCP_85 - Group1" = 4,
+    "RCP_45 - Group2" = 24,
+    "RCP_85 - Group2" = 23,
+    "RCP_45 - Group3" = 8,
+    "RCP_85 - Group3" = 9
+  ))
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+##SOIL WATER CONTENT MAIZE/MUSTARD
+# Load necessary libraries
+library(readxl)
+library(tidyr)
+library(ggplot2)
+library(reshape2)
+library(dplyr)
+
+# Read data from the Excel sheet (Book1.xlsx, Sheet2)
+df <- read_excel("Book1.xlsx", sheet = "Sheet2")
+
+# Reshape the data into long format using melt() function
+df_long <- melt(df, id.vars = "period", variable.name = "GCM_RCP", value.name = "value")
+
+# Split the variable names into crop, GCM, and RCP components
+df_long$Crop <- ifelse(grepl("MUSTARD", df_long$GCM_RCP), "Mustard", "Maize")
+df_long$GCM <- gsub("_.*", "", df_long$GCM_RCP)
+df_long$RCP <- gsub(".*_(RCP_.*)", "\\1", df_long$GCM_RCP)
+
+# Calculate the average of the values for each Crop, GCM, and RCP combination
+df_avg <- df_long %>%
+  group_by(Crop, GCM, RCP) %>%
+  summarize(avg_value = mean(value, na.rm = TRUE)) %>%
+  ungroup()
+
+# Create the plot
+ggplot(df_avg, aes(x = GCM, y = avg_value, group = interaction(Crop, RCP))) +
+  geom_line(color = "black", size = 1) +  # Increased line size
+  geom_point(size = 3) + # Add points for better visualization
+  facet_wrap(~ Crop, scales = "free_y") + # Separate plots for each crop
+  labs(
+    x = "GCM",
+    y = "Average Projected SWC"
+  ) +
+  theme_minimal(base_size = 14, base_family = "Times New Roman") +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    axis.line = element_line(color = "black", size = 0.7),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 22, color = "black", family = "Times New Roman"),
+    axis.text.y = element_text(size = 22, color = "black", family = "Times New Roman"),
+    axis.title.x = element_text(size = 22, face = "bold", color = "black", family = "Times New Roman"),
+    axis.title.y = element_text(size = 22, face = "bold", color = "black", family = "Times New Roman"),
+    legend.position = "none",
+    strip.text = element_text(size = 22, color = "black", face = "bold")  # Title size and styling
+  )
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
